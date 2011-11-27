@@ -20,7 +20,7 @@ import Test.Hspec.HUnit()
 import Test.Hspec.QuickCheck(prop)
 
 import Database.Persist
-import Database.Persist.Base (DeleteCascade (..), PersistValue(..))
+import Database.Persist.Base (PersistValue(..))
 import Database.Persist.Query (limitOffsetOrder)
 
 import Database.Persist.Join (selectOneMany, SelectOneMany(..))
@@ -33,14 +33,18 @@ import Language.Haskell.TH.Syntax (Type(..))
 import Database.Persist.TH (MkPersistSettings(..))
 import Control.Monad (replicateM)
 import qualified Data.ByteString as BS
+import qualified Control.Applicative
 
 #else
+import Database.Persist.Base ( DeleteCascade (..) )
 import Database.Persist.GenericSql
 import qualified Database.Persist.Join.Sql
 import Database.Persist.Sqlite
 import Control.Exception (SomeException)
 import qualified Control.Exception.Control as Control
 import System.Random
+import Data.Text (Text)
+import Database.Persist.TH ( mkMigrate, mkDeleteCascade, share, sqlSettings )
 
 #if WITH_POSTGRESQL
 import Database.Persist.Postgresql
@@ -48,7 +52,7 @@ import Database.Persist.Postgresql
 
 #endif
 
-import Database.Persist.TH (mkPersist, mkMigrate, derivePersistField, share, sqlSettings, persist, mkDeleteCascade)
+import Database.Persist.TH (mkPersist, derivePersistField, persist )
 import Control.Monad.IO.Class
 
 import Control.Monad (unless)
@@ -56,7 +60,6 @@ import Data.Int
 import Data.Word
 import qualified Control.Monad.IO.Control
 
-import Data.Text (Text)
 import Web.PathPieces (SinglePiece (..))
 import Data.Maybe (fromJust)
 import Test.QuickCheck
@@ -156,6 +159,8 @@ cleanDB = do
 
 #ifdef WITH_MONGODB
 type BackendMonad = Action
+
+runConn :: (Control.Monad.IO.Control.MonadControlIO m, Control.Applicative.Applicative m) => BackendMonad m b -> m b
 runConn f = do
 --    withMongoDBConn ("test") "127.0.0.1" $ runMongoDBConn MongoDB.safe MongoDB.Master f
   withMongoDBConn "test" "127.0.0.1" $ runMongoDBConn MongoDB.master f
@@ -169,14 +174,14 @@ setup = do
   liftIO $ putStrLn $ "version: " ++ show v
   if andVersion v then return () else error "mongoDB version not supported: need at least 1.9.1"
   -- TODO: use dropDatabase
-  MongoDB.dropDatabase "test"   --(MongoDB.Database "test")
+  _<- MongoDB.dropDatabase "test"   --(MongoDB.Database "test")
   return ()
   where
     andVersion vresult = case show vresult of
       '"':'1':'.':n:'.':minor -> let i = ((read [n]) ::Int) in i > 9 || (i == 9 && ((read $ init minor)::Int) >= 1)
       '"':'2':'.':_ -> True
+      _ -> error "unknown version"
 
---db :: MongoPersist IO () -> Assertion
 db :: Action IO () -> Assertion
 db actions = do
   r <- runConn actions
@@ -193,7 +198,7 @@ instance Arbitrary PersistValue where
 type BackendMonad = SqlPersist
 sqlite_database :: Text
 sqlite_database = "test/testdb.sqlite3"
-runConn :: Control.Monad.IO.Control.MonadControlIO m => SqlPersist m t -> m ()
+runConn :: (Control.Monad.IO.Control.MonadControlIO m) => BackendMonad m b -> m ()
 runConn f = do
     _<-withSqlitePool sqlite_database 1 $ runSqlPool f
 #if WITH_POSTGRESQL
@@ -503,8 +508,8 @@ specs = describe "persistent" $ do
 
       let mic = Person "Michael" 25 Nothing
       micK <- insert mic
-      Just p <- get micK
-      p @== mic
+      Just p1 <- get micK
+      p1 @== mic
 
       replace micK $ Person "Michael" 25 Nothing
       Just p2 <- get micK
