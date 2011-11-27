@@ -24,7 +24,7 @@ library
                    , persistent-query        >= 0.7       && < 0.8
                    , monad-control           >= 0.2       && < 0.3
                    , containers              >= 0.2       && < 0.5
-                   , text                    >= 0.7       && < 0.12
+                   , text                    >= 0.7       && < 1
                    , data-object             >= 0.3       && < 0.4
                    , neither                 >= 0.3       && < 0.4
     exposed-modules: Database.Sqlite

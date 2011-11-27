@@ -2,7 +2,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Database.Persist.GenericSql.Query 
-  ( PersistQuery(..) )
+  ( PersistQuery (..),
+    SqlPersist (..)
+  )
   where
 
 import Database.Persist.Store

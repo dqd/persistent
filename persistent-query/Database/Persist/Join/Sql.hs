@@ -9,7 +9,6 @@ import Database.Persist.Join hiding (RunJoin (..))
 import qualified Database.Persist.Join as J
 import Database.Persist.Store
 import Database.Persist.Query
-import Database.Persist.GenericSql.Query
 import Database.Persist.GenericSql.ConvertFilters
 import Control.Monad (liftM)
 import Data.Maybe (mapMaybe)

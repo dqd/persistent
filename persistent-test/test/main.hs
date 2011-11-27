@@ -38,6 +38,7 @@ import qualified Control.Applicative
 #else
 import Database.Persist.Store ( DeleteCascade (..) )
 import Database.Persist.GenericSql
+import Database.Persist.GenericSql.Query ()
 import qualified Database.Persist.Join.Sql
 import Database.Persist.Sqlite
 import Control.Exception (SomeException)
