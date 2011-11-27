@@ -25,7 +25,7 @@ module Database.Persist.MongoDB
     ) where
 
 import Database.Persist
-import Database.Persist.Base
+import Database.Persist.Store
 import Database.Persist.Query
 
 import qualified Control.Monad.IO.Class as Trans
@@ -375,7 +375,7 @@ wrapFromPersistValues e doc = fromPersistValues reorder
         -- another application may use fields we don't care about
         -- our own application may set extra fields with the raw driver
         -- TODO: instead use a projection to avoid network overhead
-        match [] fields values = values
+        match [] _ values = values
         match (c:cs) fields values =
           let (found, unused) = matchOne fields []
           in match cs unused (values ++ [snd found])
@@ -475,10 +475,11 @@ instance PersistConfig MongoConf where
         pool' <- go $ lookupScalar "poolsize" e
         pool  <- safeRead "poolsize" pool'
         accessString <- defaultTo "ConfirmWrites" $ lookupScalar "accessMode" e
-        let accessMode = case accessString of
-               "ReadStaleOk"       -> DB.ReadStaleOk
-               "UnconfirmedWrites" -> DB.UnconfirmedWrites
-               "ConfirmWrites"     -> DB.ConfirmWrites [u"j" DB.=: True]
+        accessMode <- case accessString of
+               "ReadStaleOk"       -> MRight DB.ReadStaleOk
+               "UnconfirmedWrites" -> MRight DB.UnconfirmedWrites
+               "ConfirmWrites"     -> MRight $ DB.ConfirmWrites [u"j" DB.=: True]
+               badAccess -> MLeft $ "unknown accessMode: " ++ (T.unpack badAccess)
 
         return $ MongoConf (T.unpack db) (T.unpack host) pool accessMode
       where
@@ -487,7 +488,7 @@ instance PersistConfig MongoConf where
         go (MRight a) = MRight a
 
         defaultTo :: a -> MEither ObjectExtractError a -> MEither String a
-        defaultTo def (MLeft e) = MRight def
+        defaultTo def (MLeft _) = MRight def
         defaultTo _ (MRight v) = MRight v
 
         safeRead :: String -> T.Text -> MEither String Int

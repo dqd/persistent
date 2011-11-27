@@ -1,5 +1,5 @@
 name:            persistent-test
-version:         0.6.3
+version:         0.7.0
 license:         BSD3
 license-file:    LICENSE
 author:          Michael Snoyman <michael@snoyman.com>
@@ -23,7 +23,7 @@ library
 test-suite test
     type:          exitcode-stdio-1.0
     main-is:       main.hs
-    hs-source-dirs: test, persistent, persistent-template, persistent-sqlite, persistent-postgresql, persistent-mongoDB
+    hs-source-dirs: test, persistent, persistent-query, persistent-template, persistent-sqlite, persistent-postgresql, persistent-mongoDB
 
     build-depends:   HUnit
                    , hspec >= 0.8 && < 0.10

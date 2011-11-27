@@ -20,8 +20,8 @@ import Test.Hspec.HUnit()
 import Test.Hspec.QuickCheck(prop)
 
 import Database.Persist
-import Database.Persist.Base (PersistValue(..))
-import Database.Persist.Query (limitOffsetOrder)
+import Database.Persist.Store (PersistValue(..))
+import Database.Persist.Query
 
 import Database.Persist.Join (selectOneMany, SelectOneMany(..))
 import qualified Database.Persist.Join
@@ -36,7 +36,7 @@ import qualified Data.ByteString as BS
 import qualified Control.Applicative
 
 #else
-import Database.Persist.Base ( DeleteCascade (..) )
+import Database.Persist.Store ( DeleteCascade (..) )
 import Database.Persist.GenericSql
 import qualified Database.Persist.Join.Sql
 import Database.Persist.Sqlite

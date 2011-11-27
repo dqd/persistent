@@ -1,5 +1,5 @@
 name:            persistent-mega
-version:         0.6.4
+version:         0.7.0
 license:         BSD3
 license-file:    LICENSE
 author:          Michael Snoyman <michael@snoyman.com>
@@ -15,12 +15,16 @@ homepage:        http://www.yesodweb.com/book/persistent
 library
     hs-source-dirs:
                     persistent
+                    persistent-query
                     persistent-sqlite
                     persistent-postgresql
                     persistent-template
                     persistent-mongoDB
 
     build-depends:   base                     >= 4       && < 5
+
+                   -- persistent-query
+                   , enumerator               >= 0.4.9   && < 0.5
 
                    -- persistent-mongodb
                    , mongoDB            >= 1.1     && < 1.2
@@ -45,7 +49,6 @@ library
                    , time                     >= 1.1.4
                    , text                     >= 0.8     && < 0.12
                    , containers               >= 0.2     && < 0.5
-                   , enumerator               >= 0.4.9   && < 0.5
                    , monad-control            >= 0.2     && < 0.3
                    , pool                     >= 0.1     && < 0.2
                    , blaze-html               >= 0.4     && < 0.5
@@ -66,7 +69,7 @@ library
 
                      -- persistent
                      Database.Persist
-                     Database.Persist.Base
+                     Database.Persist.Store
                      Database.Persist.Quasi
                      Database.Persist.GenericSql
                      Database.Persist.GenericSql.Internal

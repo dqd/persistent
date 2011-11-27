@@ -12,17 +12,19 @@ module Database.Persist.GenericSql.Internal
     , UniqueDef'
     , refName
     , tableColumns
+    , tableColumn
     , rawFieldName
     , rawTableName
     , rawTableIdName
     , RawName (..)
+    , getFieldName
     ) where
 
 import qualified Data.Map as Map
 import Data.IORef
 import Control.Monad.IO.Class
 import Data.Pool
-import Database.Persist.Base
+import Database.Persist.Store
 import Data.Maybe (fromMaybe)
 import Control.Arrow
 import Control.Monad.IO.Control (MonadControlIO)
@@ -124,6 +126,16 @@ getIdNameValue [] = Nothing
 tableColumns :: EntityDef -> [(RawName, String, [String])]
 tableColumns = map (\a@(ColumnDef _ y z) -> (rawFieldName a, y, z)) . entityColumns
 
+tableColumn :: EntityDef -> String -> ColumnDef
+tableColumn t s | s == id_ = ColumnDef id_ "Int64" []
+  where id_ = unRawName $ rawTableIdName t
+tableColumn t s = go $ entityColumns t
+  where
+    go [] = error $ "Unknown table column: " ++ s
+    go (ColumnDef x y z:rest)
+        | x == s = ColumnDef x y z
+        | otherwise = go rest
+
 type UniqueDef' = (RawName, [RawName])
 
 rawFieldName :: ColumnDef -> RawName
@@ -147,3 +159,5 @@ rawTableIdName t = RawName $
 newtype RawName = RawName { unRawName :: String } -- FIXME Text
     deriving (Eq, Ord)
 
+getFieldName :: EntityDef -> String -> RawName
+getFieldName t s = rawFieldName $ tableColumn t s
