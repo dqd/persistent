@@ -1,6 +1,6 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -9,6 +9,10 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+-- This is to test our assumption that OverlappingInstances is just for String
+#ifndef NO_OVERLAP
+{-# LANGUAGE OverlappingInstances #-}
+#endif
 
 -- | API for database actions. The API deals with fields and entities.
 -- In SQL, a field corresponds to a column, and should be a single non-composite value.
@@ -144,6 +148,7 @@ class PersistField a where
     isNullable :: a -> Bool
     isNullable _ = False
 
+#ifndef NO_OVERLAP
 instance PersistField String where
     toPersistValue = PersistText . T.pack
     fromPersistValue (PersistText s) = Right $ T.unpack s
@@ -160,6 +165,7 @@ instance PersistField String where
     fromPersistValue (PersistMap _) = Left "Cannot convert PersistMap to String"
     fromPersistValue (PersistObjectId _) = Left "Cannot convert PersistObjectId to String"
     sqlType _ = SqlString
+#endif
 
 instance PersistField ByteString where
     toPersistValue = PersistByteString
@@ -375,10 +381,11 @@ instance PersistField v => PersistField (M.Map T.Text v) where
     fromPersistValue x = Left $ "Expected PersistMap, received: " ++ show x
     sqlType _ = SqlString
 
+
 data SomePersistField = forall a. PersistField a => SomePersistField a
 instance PersistField SomePersistField where
     toPersistValue (SomePersistField a) = toPersistValue a
-    fromPersistValue x = fmap SomePersistField (fromPersistValue x :: Either String String)
+    fromPersistValue x = fmap SomePersistField (fromPersistValue x :: Either String T.Text)
     sqlType (SomePersistField a) = sqlType a
 
 newtype Key backend entity = Key { unKey :: PersistValue }
