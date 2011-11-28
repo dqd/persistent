@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -69,6 +70,9 @@ import qualified Data.Text.Read
 
 import Control.Monad.IO.Control (MonadControlIO)
 import Data.Object (TextObject)
+
+import qualified Data.Map as M
+import qualified Data.Set as S
 
 fst3 :: forall t t1 t2. (t, t1, t2) -> t
 fst3   (x, _, _) = x
@@ -322,6 +326,54 @@ class PersistEntity val where
     persistUniqueToFieldNames :: Unique val backend -> [String]
     persistUniqueToValues :: Unique val backend -> [PersistValue]
     persistUniqueKeys :: val -> [Unique val backend]
+
+instance PersistField a => PersistField [a] where
+    toPersistValue = PersistList . map toPersistValue
+    fromPersistValue (PersistList l) = fromPersistList l
+    fromPersistValue x = Left $ "Expected PersistList, received: " ++ show x
+    sqlType _ = SqlString
+
+instance (Ord a, PersistField a) => PersistField (S.Set a) where
+    toPersistValue = PersistList . map toPersistValue . S.toList
+    fromPersistValue (PersistList list) =
+      either Left (Right . S.fromList) $ fromPersistList list
+    fromPersistValue x = Left $ "Expected PersistList, received: " ++ show x
+    sqlType _ = SqlString
+
+fromPersistList :: PersistField a => [PersistValue] -> Either String [a]
+fromPersistList list =
+        foldl (\eithList v ->
+              case (eithList, fromPersistValue v) of
+                (Left e, _)         -> Left e
+                (_, Left e)         -> Left e
+                (Right xs, Right x) -> Right (x:xs)
+              ) (Right []) list
+
+instance (PersistField a, PersistField b) => PersistField (a,b) where
+    toPersistValue (x,y) = PersistList [toPersistValue x, toPersistValue y]
+    fromPersistValue (PersistList (vx:vy:[])) =
+      case (fromPersistValue vx, fromPersistValue vy) of
+        (Right x, Right y) -> Right (x, y)
+        (Left e, _) -> Left e
+        (_, Left e) -> Left e
+    fromPersistValue x = Left $ "Expected 2 item PersistList, received: " ++ show x
+    sqlType _ = SqlString
+
+instance PersistField v => PersistField (M.Map T.Text v) where
+    toPersistValue = PersistMap . map (\(k,v) -> (k, toPersistValue v)) . M.toList
+    fromPersistValue (PersistMap kvs) = case (
+        foldl (\eithAssocs (k,v) ->
+              case (eithAssocs, fromPersistValue v) of
+                (Left e, _) -> Left e
+                (_, Left e)   -> Left e
+                (Right assocs, Right v') -> Right ((k,v'):assocs)
+              ) (Right []) kvs
+      ) of
+        Right vs -> Right $ M.fromList vs
+        Left e -> Left e
+
+    fromPersistValue x = Left $ "Expected PersistMap, received: " ++ show x
+    sqlType _ = SqlString
 
 data SomePersistField = forall a. PersistField a => SomePersistField a
 instance PersistField SomePersistField where
