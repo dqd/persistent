@@ -23,8 +23,8 @@ import Database.Persist
 import Database.Persist.Store (PersistValue(..))
 import Database.Persist.Query
 
-import Database.Persist.Join (selectOneMany, SelectOneMany(..))
-import qualified Database.Persist.Join
+import Database.Persist.Query.Join (selectOneMany, SelectOneMany(..))
+import qualified Database.Persist.Query.Join
 
 #if WITH_MONGODB
 import qualified Database.MongoDB as MongoDB
@@ -37,9 +37,9 @@ import qualified Control.Applicative
 
 #else
 import Database.Persist.Store ( DeleteCascade (..) )
-import Database.Persist.GenericSql
-import Database.Persist.GenericSql.Query ()
-import qualified Database.Persist.Join.Sql
+import Database.Persist.Query.GenericSql
+import Database.Persist.Query.GenericSql ()
+import qualified Database.Persist.Query.Join.Sql
 import Database.Persist.Sqlite
 import Control.Exception (SomeException)
 import qualified Control.Exception.Control as Control
@@ -657,10 +657,10 @@ specs = describe "persistent" $ do
       liftIO $ x @?= [(pid1, p1), (pid3, p3)]
 
 
-  it "joinNonSql" $ db $ joinGeneric Database.Persist.Join.runJoin
+  it "joinNonSql" $ db $ joinGeneric Database.Persist.Query.Join.runJoin
 
 #ifndef WITH_MONGODB
-  it "joinSql" $ db $ joinGeneric Database.Persist.Join.Sql.runJoin
+  it "joinSql" $ db $ joinGeneric Database.Persist.Query.Join.Sql.runJoin
 
   it "commit/rollback" (caseCommitRollback >> runConn cleanDB)
 

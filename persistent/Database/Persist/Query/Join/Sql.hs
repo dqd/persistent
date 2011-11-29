@@ -1,15 +1,15 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-module Database.Persist.Join.Sql
+module Database.Persist.Query.Join.Sql
     ( RunJoin (..)
     ) where
 
-import Database.Persist.Join hiding (RunJoin (..))
-import qualified Database.Persist.Join as J
+import Database.Persist.Query.Join hiding (RunJoin (..))
+import qualified Database.Persist.Query.Join as J
 import Database.Persist.Store
 import Database.Persist.Query
-import Database.Persist.GenericSql.ConvertFilters
+import Database.Persist.Query.GenericSql
 import Control.Monad (liftM)
 import Data.Maybe (mapMaybe)
 import Data.List (intercalate, groupBy)

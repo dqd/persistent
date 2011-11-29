@@ -74,10 +74,13 @@ library
                      Database.Persist.GenericSql
                      Database.Persist.GenericSql.Internal
                      Database.Persist.GenericSql.Raw
+                     Database.Persist.GenericSql.Migration
                      Database.Persist.TH.Library
                      Database.Persist.Util
-                     Database.Persist.Join
-                     Database.Persist.Join.Sql
+                     Database.Persist.Query
+                     Database.Persist.Query.GenericSql
+                     Database.Persist.Query.Join
+                     Database.Persist.Query.Join.Sql
 
     ghc-options:     -Wall
 
